@@ -13,12 +13,12 @@ int workchain() asm "0 PUSHINT";
     );
 }
 
-() save_data(int is_enabled, slice owner_address, slice jetton_wallet_code, cell whitelist, int jetton_balance) impure inline {
+() save_data(int is_enabled, slice owner_address, cell jetton_wallet, cell whitelist, int jetton_balance) impure inline {
     set_data(
         begin_cell()
             .store_int(is_enabled, 1)
             .store_slice(owner_address)
-            .store_ref(jetton_wallet_code)
+            .store_ref(jetton_wallet)
             .store_dict(whitelist)
             .store_coins(jetton_balance)
         .end_cell()
@@ -83,6 +83,10 @@ slice calculate_jetton_wallet_address(cell state_init) inline {
 }
 
 () recv_internal(int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    if (in_msg_body.slice_empty?()) { ;; ignore empty messages
+        return ();
+    }
+
     int my_balance = pair_first(get_balance());
     slice cs = in_msg_full.begin_parse();
     int flags = cs~load_uint(4);
